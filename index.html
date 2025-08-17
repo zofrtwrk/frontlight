@@ -12,49 +12,58 @@
 
 /* Body + bg controls */
 body{
-  /* controls */
+  /* layout + centering */
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 24px;
+  overflow: hidden;
+  position: relative;
+
+  /* bg controls */
   --bg-blur: 4px;
-  --bg-image: url('/d/nanana.PNG'); /* check exact filename case */
+  --bg-image: url('/d/nanana.PNG');
   --bg-overlay: rgba(255,255,255,0.30);
-  --bg-fit: contain;   /* <— switch to cover if you prefer crop */
-  --bg-scale: 1.02;    /* minimal scale to avoid blur-edge clipping */
+  --bg-fit: contain;
+  --bg-scale: 1.02;
 }
+
 
 .bg-img{
   position: fixed; inset: 0; pointer-events: none; z-index: 0;
-
-  /* split layers so we can size each independently */
   background-image:
     linear-gradient(135deg, var(--bg-overlay), var(--bg-overlay)),
     var(--bg-image);
   background-repeat: no-repeat, no-repeat;
   background-position: center center, center center;
   background-size: 100% 100%, var(--bg-fit);
-
   filter: blur(var(--bg-blur));
   transform: scale(var(--bg-scale));
 }
 
 
+
 /* Main container (fixed stray brace + z-index) */
 .container{
-  position:relative;z-index:1;
-  display:flex;width:90%;max-width:950px;
-  background:#fff;border-radius:14px;overflow:hidden;
-  box-shadow:0 16px 48px rgba(0,0,0,.15);
-  animation:slideIn .7s ease-out;
+  position: relative; z-index: 1;
+  display: flex;
+  width: min(90vw, 950px);
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0,0,0,.15);
+  animation: slideIn .7s ease-out;
+  margin: 0 auto;            /* extra safety */
+}
 
-    }
     @keyframes slideIn {
       from {opacity:0;transform:translateY(40px);}
       to {opacity:1;transform:translateY(0);}
     }
-    .left-panel {
-      width:50%;
-      background:#0078C2;
-      padding:50px;
-      color:#fff;
-      text-align:center;
+   .left-panel{ flex: 0 0 40%; background:#0078C2; padding:50px; color:#fff; text-align:center; }
+.right-panel{ flex: 1 0 60%; padding:40px; background:#fff; display:flex; flex-direction:column; align-items:center; }
+
     }
     .text-logo {
       font-family:"Playfair Display",serif;
