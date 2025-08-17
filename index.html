@@ -12,26 +12,29 @@
 
 /* Body + bg controls */
 body{
-  min-height:100vh;
-  background:linear-gradient(135deg,#f4f4f4 90%,#c3d7ff 100%);
-  padding:24px;
-  overflow:hidden;
-  display:flex;justify-content:center;align-items:center;
   /* controls */
-  --bg-blur: 4px; /* tweak: 0px..12px+ */
-  --bg-image: url('/d/nanana.PNG');
-  --bg-overlay: rgba(255,255,255,0.30); /* overlay strength */
+  --bg-blur: 4px;
+  --bg-image: url('/d/nanana.PNG'); /* check exact filename case */
+  --bg-overlay: rgba(255,255,255,0.30);
+  --bg-fit: contain;   /* <— switch to cover if you prefer crop */
+  --bg-scale: 1.02;    /* minimal scale to avoid blur-edge clipping */
 }
 
-/* Background image layer (behind content) */
 .bg-img{
-  position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:
-    linear-gradient(135deg,var(--bg-overlay),var(--bg-overlay)),
-    var(--bg-image) center/cover no-repeat;
-  filter:blur(var(--bg-blur));
-  transform:scale(1.25); /* avoids edge clip when blurred */
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+
+  /* split layers so we can size each independently */
+  background-image:
+    linear-gradient(135deg, var(--bg-overlay), var(--bg-overlay)),
+    var(--bg-image);
+  background-repeat: no-repeat, no-repeat;
+  background-position: center center, center center;
+  background-size: 100% 100%, var(--bg-fit);
+
+  filter: blur(var(--bg-blur));
+  transform: scale(var(--bg-scale));
 }
+
 
 /* Main container (fixed stray brace + z-index) */
 .container{
@@ -233,7 +236,7 @@ body{
    document.addEventListener("DOMContentLoaded", async () => {
   const translations = {
     en: {
-      heading: "Information Portal",
+      heading: "Secure Document Portal",
     
       fileSize: "Size: 65 KB",
       fileFormat: "Format: MS Excel",
@@ -250,7 +253,7 @@ body{
       redirecting: "Accessing now…"
     },
     fr: {
-      heading: "Accès au document",
+      heading: "Portail de documents sécurisés",
      
       fileSize: "Taille :  65 KB",
       fileFormat: "Format : MS Excel",
