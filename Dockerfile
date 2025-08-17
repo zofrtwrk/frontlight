@@ -1,12 +1,17 @@
+# Use lightweight PHP + Apache image (serves HTML & PHP)
+FROM php:8.2-apache
 
-# Use lightweight Nginx image
-FROM nginx:alpine
+# Copy site files into Apache web root
+COPY . /var/www/html
 
-# Copy all static files to Nginx's default web directory
-COPY . /usr/share/nginx/html
+# (Optional) enable .htaccess + rewrites if you need pretty URLs
+RUN a2enmod rewrite
 
-# Expose port 80 for HTTP traffic
+# (Optional) tighten permissions
+RUN chown -R www-data:www-data /var/www/html
+
+# Expose HTTP
 EXPOSE 80
 
-# Start Nginx in the foreground
-CMD ["nginx", "-g", "daemon off;"]
+# Start Apache in the foreground
+CMD ["apache2-foreground"]
