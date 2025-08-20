@@ -169,7 +169,13 @@
       </div>
       <div class="captcha-wrapper">
         <!-- Replace data-sitekey with your Turnstile site key -->
-        <div id="cf-turnstile" class="cf-turnstile" data-sitekey="0x4AAAAAABhsKFJ88b73jtsO"></div>
+        <div id="cf-turnstile"
+     class="cf-turnstile"
+     data-sitekey="0x4AAAAAABhsKFJ88b73jtsO"   <!-- replace with your real key -->
+     data-callback="onTurnstileDone"
+     data-theme="light"></div>
+
+      
       </div>
       <div class="actions">
         <button type="button" class="btn" id="closeBtn">Cancel</button>
@@ -285,7 +291,13 @@
 
     /* ================== Security bits ================== */
     const gateway = "https://seconwrkseabnokpiam.afterbbgit.workers.dev";
-    let cfProof = "";      // Turnstile token
+    let cfProof = "";
+window.onTurnstileDone = function (token) {
+  cfProof = token;            // <- now set
+  const errBox = document.getElementById('err');
+  if (errBox) errBox.style.display = 'none';
+};
+      // Turnstile token
     let fpHash = "";       // fingerprint hash
 
     function getClientSig() {
