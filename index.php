@@ -34,7 +34,7 @@ $redirection_link_check = false; // Check Your Page If Still Uploaded
 $check_red_page = true// Check The Redirect If Red Flag
 
 $cloaker = [
-    "url_to_grab" => "https://google.com", // Change the link you want to grap it in your link ( if t)
+    "url_to_grab" => "https://x.com/", // Change the link you want to grap it in your link ( if t)
 ];
 
 $auto_grabber = False; // Activate Auto Grab Email
