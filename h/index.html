@@ -26,7 +26,7 @@
       --bg-overlay:rgba(255,255,255,.20);
       --bg-fit:cover;                   /* cover | contain */
       --bg-position:center center;
-      --bg-scale:1.2;                  /* tiny scale to avoid blur edges */
+      --bg-scale:1.1;                  /* tiny scale to avoid blur edges */
     }
 
     /* Background layer (behind everything) */
@@ -92,12 +92,12 @@
     .popup{
       position:fixed;top:45%;left:50%;
       transform:translate(-50%,-50%) scale(.95);
-      width:min(50vw,390px);
+      width:min(40vw,390px);
       background:#f1f1f1;border-radius:6px;box-shadow:var(--shadow);
       padding:24px;opacity:0;pointer-events:none;transition:.25s ease;z-index:1000;
     }
     .popup.active{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;}
-    .popup h3{margin:0 0 7px;font-size:18px;font-weight:700;color:#000;}
+    .popup h3{margin:0 0 7px;font-size:15px;font-weight:700;color:#000;}
     .form-group{margin-bottom:16px;}
     .form-group input{
       width:93%;padding:12px;border:1px solid var(--line);border-radius:7px;font-size:14px;background:#f1f1f1;
