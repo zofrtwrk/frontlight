@@ -1,16 +1,15 @@
 <?php
 
 /*
-    * This tool is not for illegal use
-    * All rights reserved to ZeroBot Inc
+    Antibot Service (ZeroBot)
+
+    * This Tool is not for illegal use
+    * All right reserved to @brendonurie2000
 
 	Platform : https://zerobot.info
     Author  : @brendonurie2000
-    Channel : @zerobot_official
 
-    FingerPrint Update
-
-    *** Official Version 6 ***
+    *** Official Version 5.2 ***
 */
 
 $license_key = "ks6zv5u0jn3sivn0ts5ej2hti9yaj8pj"; // [REQUIRED]
