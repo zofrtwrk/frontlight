@@ -8,7 +8,7 @@
   <style>
     :root{
       --accent:#10793F; --accent-2:#10793F;
-      --bg:#fff; --text:#10793F; --muted:#000; --line:#000;
+      --bg:#fff; --text:#10793F; --muted:#000; --line:#ccc;
       --radius:14px; --shadow:0 8px 24px rgba(0,0,0,.08);
     }
 
@@ -48,11 +48,11 @@
 
     /* ===== Card ===== */
     .file-card{
-      width:min(70vw,720px);
+      width:min(65vw,620px);
       margin:0 auto;
       padding:24px;
       background:var(--bg);
-      border-radius:6px;
+      border-radius:5px;
       border:1px solid var(--line);
       box-shadow:var(--shadow);
       animation:slideIn .7s ease-out;
@@ -68,7 +68,7 @@
     .file-title p{margin:2px 0 0;color:var(--muted);font-size:12px;}
 
     .file-preview{
-      margin:20px 0;border-radius:7px;overflow:hidden;position:relative;height:220px;border:1px solid var(--line);
+      margin:20px 0;border-radius:4px;overflow:hidden;position:relative;height:220px;border:1px solid var(--line);
     }
     .file-preview img{width:90%;height:100%;object-fit:cover;filter:blur(1.3px);}
     .file-preview::after{
