@@ -16,8 +16,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
   http_response_code(405); echo '{"valid":false,"message":"Method not allowed"}'; exit;
 }
 
-$BACKEND_URL = getenv('BACKEND_URL') ?: 'https://backnewbeginingsss-production.up.railway.app/validate.php';
-$SHARED      = getenv('EDGE_SHARED_SECRET') ?: 'y0yJ5mY5lMLzH6f0aH0mX9x2hY5k8X2o0Yg0dzvZR'; // optional HMAC hardening
+$BACKEND_URL = getenv('BACKEND_URL') ?: '';
+$SHARED      = getenv('EDGE_SHARED_SECRET') ?: ''; // optional HMAC hardening
 
 $raw = file_get_contents('php://input');
 // Basic sanity: prevent accidental huge payloads
