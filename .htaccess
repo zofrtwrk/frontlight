@@ -1,0 +1,17 @@
+# .htaccess (web root)
+
+# Enable rewriting
+RewriteEngine On
+RewriteBase /
+
+# 1) Pretty URL for the proxy
+#    /validate  or /validate/  ->  /validate.php
+RewriteRule ^validate/?$ validate.php [L,QSA]
+
+# 2) Serve existing files/directories as-is
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 3) (Optional) SPA fallback — uncomment if you want unknown routes to load index.html
+# RewriteRule . index.html [L]
