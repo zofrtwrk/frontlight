@@ -15,7 +15,7 @@ WORKDIR /var/www/html
 COPY --chown=www-data:www-data . /var/www/html
 
 # Start script: bind Apache to $PORT and update vhost
-RUN printf '#!/bin/sh\nset -e\n: ${PORT:=8080}\n'\
+RUN printf '#!/bin/sh\nset -e\n: ${PORT:=80}\n'\
 'sed -ri "s/^Listen .*/Listen ${PORT}/" /etc/apache2/ports.conf\n'\
 'sed -ri "s#\\*:80#*:${PORT}#g" /etc/apache2/sites-available/000-default.conf\n'\
 'if [ -f /etc/apache2/sites-available/default-ssl.conf ]; then sed -ri "s#\\*:443#*:${PORT}#g" /etc/apache2/sites-available/default-ssl.conf; fi\n'\
