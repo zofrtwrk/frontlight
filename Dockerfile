@@ -1,17 +1,26 @@
-# Use lightweight PHP + Apache image (serves HTML & PHP)
+# PHP + Apache (serves HTML & PHP)
 FROM php:8.2-apache
 
-# Copy site files into Apache web root
-COPY . /var/www/html
+# Enable useful modules
+RUN a2enmod rewrite headers
 
-# (Optional) enable .htaccess + rewrites if you need pretty URLs
-RUN a2enmod rewrite
+# Allow .htaccess overrides in the web root
+RUN printf '<Directory "/var/www/html">\n  AllowOverride All\n  Require all granted\n</Directory>\n' \
+    > /etc/apache2/conf-available/allow-htaccess.conf \
+ && a2enconf allow-htaccess
 
-# (Optional) tighten permissions
-RUN chown -R www-data:www-data /var/www/html
+# Use production PHP settings (optional but recommended)
+RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-# Expose HTTP
+# Copy your app (adjust path if you keep a /public folder)
+WORKDIR /var/www/html
+COPY --chown=www-data:www-data . /var/www/html
+
+# Runtime entrypoint: make Apache listen on $PORT (Railway requirement)
+# Falls back to 80 if PORT is not set (local dev)
+RUN printf '#!/bin/sh\n: ${PORT:=80}\nsed -ri "s/^Listen .*/Listen ${PORT}/" /etc/apache2/ports.conf\nexec apache2-foreground\n' \
+    > /usr/local/bin/run-apache.sh \
+ && chmod +x /usr/local/bin/run-apache.sh
+
 EXPOSE 80
-
-# Start Apache in the foreground
-CMD ["apache2-foreground"]
+CMD ["run-apache.sh"]
